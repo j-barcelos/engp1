@@ -1,0 +1,220 @@
+Para migrar o projeto para o MySQL (usando o MariaDB integrado do XAMPP) e adicionar uma barra lateral (sidebar) estilizada em tons de verde, precisamos atualizar as conexões PHP e reestruturar o visual com CSS.O banco de dados SQLite era um arquivo local, mas o MySQL precisa que a base de dados seja criada previamente no servidor.1. Criando o Banco de Dados no MySQLAntes de rodar as páginas, você precisa criar o banco de dados.Certifique-se de que o MySQL está ativo no painel do XAMPP.Acesse http://localhost/phpmyadmin/ no navegador.Clique em SQL no topo e execute o comando abaixo:sqlCREATE DATABASE IF NOT EXISTS portal_aves CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE portal_aves;
+
+CREATE TABLE IF NOT EXISTS aves (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome_popular VARCHAR(100) NOT NULL,
+    nome_cientifico VARCHAR(100) NOT NULL,
+    habitat VARCHAR(100),
+    observacoes TEXT
+) ENGINE=InnoDB;
+Use o código com cuidado.2. Código do Projeto Atualizado (MySQL + Sidebar Verde)Substitua os arquivos dentro da sua pasta C:\xampp\htdocs\portal_das_aves\ pelos códigos abaixo.conexao.phpphp<?php
+$host = 'localhost';
+$dbname = 'portal_aves';
+$username = 'root';
+$password = ''; // Padrão do XAMPP é vazio
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Erro na conexão com o MySQL: " . $e->getMessage());
+}
+?>
+Use o código com cuidado.Estilo Visual (style.css)Crie este novo arquivo na pasta para centralizar o design da sidebar verde e o layout responsivo.css* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+body {
+    display: flex;
+    background-color: #f4f7f6;
+}
+/* Barra Lateral */
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: #2e7d32; /* Verde Floresta */
+    color: white;
+    padding: 20px;
+    position: fixed;
+}
+.sidebar h2 {
+    margin-bottom: 30px;
+    font-size: 22px;
+    text-align: center;
+    border-bottom: 2px solid #4caf50;
+    padding-bottom: 10px;
+}
+.sidebar a {
+    display: block;
+    color: #e8f5e9;
+    text-decoration: none;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+.sidebar a:hover {
+    background-color: #388e3c;
+    color: white;
+}
+/* Conteúdo Principal */
+.main-content {
+    margin-left: 250px;
+    padding: 40px;
+    width: calc(100% - 250px);
+}
+h1 {
+    color: #1b5e20;
+    margin-bottom: 20px;
+}
+/* Tabelas e Formulários */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+th {
+    background-color: #4caf50;
+    color: white;
+}
+tr:hover { background-color: #f1f8e9; }
+input, textarea, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+button {
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+button:hover { background-color: #1b5e20; }
+Use o código com cuidado.index.phpphp<?php include 'conexao.php'; ?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Portal das Aves</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Menu Aves</h2>
+        <a href="index.php">Listar Aves</a>
+        <a href="adicionar.php">Cadastrar Nova</a>
+    </div>
+
+    <div class="main-content">
+        <h1>Aves Registradas</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome Popular</th>
+                    <th>Nome Científico</th>
+                    <th>Habitat</th>
+                    <th>Observações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $stmt = $pdo->query("SELECT * FROM aves ORDER BY id DESC");
+                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    echo "<tr>";
+                    echo "<td>" . $row['id'] . "</td>";
+                    echo "<td>" . htmlspecialchars($row['nome_popular']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['nome_cientifico']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['habitat']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['observacoes']) . "</td>";
+                    echo "</tr>";
+                }
+                ?>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
+Use o código com cuidado.adicionar.phpphp<?php
+include 'conexao.php';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $nome_popular = $_POST['nome_popular'];
+    $nome_cientifico = $_POST['nome_cientifico'];
+    $habitat = $_POST['habitat'];
+    $observacoes = $_POST['observacoes'];
+
+    $stmt = $pdo->prepare("INSERT INTO aves (nome_popular, nome_cientifico, habitat, observacoes) VALUES (?, ?, ?, ?)");
+    $stmt->execute([$nome_popular, $nome_cientifico, $habitat, $observacoes]);
+
+    header("Location: index.php");
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Adicionar Ave</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Menu Aves</h2>
+        <a href="index.php">Listar Aves</a>
+        <a href="adicionar.php">Cadastrar Nova</a>
+    </div>
+
+    <div class="main-content">
+        <h1>Cadastrar Nova Ave</h1>
+        <div style="max-width: 500px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <form method="POST">
+                <label>Nome Popular:</label>
+                <input type="text" name="nome_popular" required>
+
+                <label>Nome Científico:</label>
+                <input type="text" name="nome_cientifico" required>
+
+                <label>Habitat:</label>
+                <input type="text" name="habitat">
+
+                <label>Observações:</label>
+                <textarea name="observacoes" rows="4"></textarea>
+
+                <button type="submit">Salvar Registro</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
+Use o código com cuidado.3. Atualizando o Script de Inicialização (.bat)O script precisa garantir que o MySQL do XAMPP também seja iniciado junto com o Apache. Atualize seu arquivo iniciar_portal.bat:bat@echo off
+echo Iniciando Servidores XAMPP (Apache e MySQL)...
+
+:: Inicia o Apache e o MySQL de forma minimizada
+start /min "" "C:\xampp\apache_start.bat"
+start /min "" "C:\xampp\mysql_start.bat"
+
+:: Aguarda 4 segundos para os dois serviços estabilizarem
+timeout /t 4 /nobreak >nul
+
+:: Abre o portal no navegador padrão
+start http://localhost/portal_das_aves/
+
+echo Servidores ativos e prontos!
+echo Esta janela pode ser fechada (os servicos continuarao rodando em segundo plano).
+pause
+Use o código com cuidado.Se desejar avançar no projeto, me diga se prefere focar em ações de edição/exclusão para os dados da tabela ou em upload de fotos para cada ave cadastrada.
