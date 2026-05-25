@@ -1,7 +1,4 @@
-Nome Popular: Mãe-da-lua
-Cientifico: Nyctibius griseus
-Habitat: Bordas de florestas, áreas de transição, cerrados e campos com árvores espaçadas.
-Curiosidade: Põem um único ovo que é chocado pelo macho.
+'Urutau', 'Cyanopica cyanus', 'Matas ciliares, cerrado e áreas agrícolas abertas.', 'Ave de plumagem cinza‑azulada, reconhecida pelo voo ruidoso em forma de “cicada”.'
 
 CREATE DATABASE IF NOT EXISTS portal_aves CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE portal_aves;
